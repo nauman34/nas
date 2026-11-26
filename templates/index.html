@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Network Scanner</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark"><div class="container"><span class="navbar-brand">Python Nmap Scanner</span></div></nav>
+<main class="container py-4">
+  <div class="row justify-content-center"><div class="col-lg-9">
+    <div class="card shadow-sm"><div class="card-body p-4">
+      <h1 class="h4 mb-3">Network assessment</h1>
+      <p class="text-muted">Discover live hosts on an authorized network or inspect a single authorized host.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}{% endwith %}
+      <form method="post">
+        <label class="form-label" for="target">IP address or CIDR network</label>
+        <input class="form-control mb-3" id="target" name="target" value="{{ target }}" placeholder="192.168.1.0/24" required>
+        <label class="form-label" for="mode">Scan mode</label>
+        <select class="form-select mb-3" id="mode" name="mode">
+          <option value="network" {% if mode == 'network' %}selected{% endif %}>LAN host discovery</option>
+          <option value="host" {% if mode == 'host' %}selected{% endif %}>Single host: top 1,000 TCP ports + service detection</option>
+        </select>
+        <div class="form-check mb-3"><input class="form-check-input" type="checkbox" required id="authorized">
+          <label class="form-check-label" for="authorized">I have authorization to scan this target.</label></div>
+        <button class="btn btn-primary" type="submit">Start scan</button>
+      </form>
+    </div></div>
+    {% if results %}
+    <section class="card shadow-sm mt-4"><div class="card-body">
+      <h2 class="h5">{{ results.scan_type }}</h2><p class="text-muted mb-1">Target: {{ results.target }}</p>
+      <p>{{ results.hosts|length }} live host(s) found.</p>
+      <div class="alert alert-info">{{ results.note }}</div>
+      {% for host in results.hosts %}
+      <div class="border rounded p-3 mb-3">
+        <strong>{{ host.ip }}</strong> {% if host.hostname %}<span class="text-muted">({{ host.hostname }})</span>{% endif %}
+        {% if host.mac %}<div class="small text-muted">MAC: {{ host.mac }}</div>{% endif %}
+        {% if host.ports %}
+        <div class="table-responsive mt-2"><table class="table table-sm">
+          <thead><tr><th>Port</th><th>Protocol</th><th>Service</th><th>Version</th></tr></thead>
+          <tbody>{% for port in host.ports %}<tr><td>{{ port.port }}</td><td>{{ port.protocol }}</td><td>{{ port.service }}</td><td>{{ port.version }}</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% elif mode == 'host' %}<span class="text-muted small">No open ports detected in the selected scan.</span>{% endif %}
+      </div>
+      {% else %}<p class="text-muted">No live hosts were reported.</p>{% endfor %}
+    </div></section>{% endif %}
+  </div></div>
+</main>
+</body></html>
